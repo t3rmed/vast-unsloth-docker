@@ -5,9 +5,8 @@ FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
 WORKDIR /workspace
 VOLUME /workspace
 
-# Combined installation step: apt-get, pip upgrade, and pip install all in one layer.
+# 1. RUN: Install System Packages and Cleanup
 RUN apt-get update && \
-    # Install system tools required for building Python packages and llama.cpp
     apt-get install -y \
         python3.10 \
         python3-pip \
@@ -17,31 +16,29 @@ RUN apt-get update && \
         wget \
         cmake \
         libcurl4-openssl-dev && \
-    # Clean up APT cache to save space immediately
-    rm -rf /var/lib/apt/lists/* && \
-    # CRITICAL FIX 1: Upgrade pip to resolve dependency AssertionErrors during installation.
-    python3.10 -m pip install --upgrade pip && \
-    
-    # CRITICAL FIX 2: Split the installation into two RUNs to avoid "No space left on device."
-    # STEP A: Install the largest packages (Torch, Unsloth, Jupyterlab)
-    pip install --no-cache-dir \
-        torch==2.2.0 \
-        xformers==0.0.24 \
-        unsloth[cu121-torch220] \
-        jupyterlab \
-        --extra-index-url https://download.pytorch.org/whl/cu121 && \
-    
-    # STEP B: Install the remaining, smaller dependencies in a subsequent layer.
-    pip install --no-cache-dir \
-        trl \
-        peft \
-        accelerate \
-        bitsandbytes
+    rm -rf /var/lib/apt/lists/*
+
+# 2. RUN: CRITICAL FIX 1: Upgrade pip in its own layer.
+RUN python3.10 -m pip install --upgrade pip
+
+# 3. RUN: CRITICAL FIX 2, STEP A: Install the largest packages (Torch, Unsloth, Jupyterlab)
+RUN pip install --no-cache-dir \
+    torch==2.2.0 \
+    xformers==0.0.24 \
+    unsloth[cu121-torch220] \
+    jupyterlab \
+    --extra-index-url https://download.pytorch.org/whl/cu121
+
+# 4. RUN: CRITICAL FIX 2, STEP B: Install the remaining, smaller dependencies.
+RUN pip install --no-cache-dir \
+    trl \
+    peft \
+    accelerate \
+    bitsandbytes
 
 # Set the explicit token for Jupyter Lab access and expose the port 1111 (common on Vast.ai)
 ENV JUPYTER_TOKEN='unsloth'
 EXPOSE 1111
 
 # Define the command that runs when the container starts.
-# This launches Jupyter Lab, sets the port, allows root access, and applies the token.
 ENTRYPOINT ["jupyter", "lab", "--port=1111", "--ip=0.0.0.0", "--allow-root", "--NotebookApp.token='unsloth'"]
