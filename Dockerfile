@@ -5,8 +5,7 @@ FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
 WORKDIR /workspace
 VOLUME /workspace
 
-# Combined installation step: apt-get, cleanup, and pip install all in one layer.
-# This prevents I/O errors and space issues during the build.
+# Combined installation step: apt-get, pip upgrade, and pip install all in one layer.
 RUN apt-get update && \
     # Install system tools required for building Python packages and llama.cpp
     apt-get install -y \
@@ -20,6 +19,8 @@ RUN apt-get update && \
         libcurl4-openssl-dev && \
     # Clean up APT cache to save space immediately
     rm -rf /var/lib/apt/lists/* && \
+    # CRITICAL FIX: Upgrade pip to resolve dependency AssertionErrors during installation.
+    python3.10 -m pip install --upgrade pip && \
     # Install all required Python packages
     # --no-cache-dir saves space.
     # --extra-index-url ensures we find packages on both PyPI (default) AND PyTorch's custom index.
