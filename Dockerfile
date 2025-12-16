@@ -1,4 +1,4 @@
-# Use a recommended, stable base image for Unsloth with CUDA 12.1 lol
+# Use a recommended, stable base image for Unsloth with CUDA 12.1
 FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
 
 # Set the working directory to /workspace, which aligns with Vast.ai best practices
@@ -19,21 +19,24 @@ RUN apt-get update && \
         libcurl4-openssl-dev && \
     # Clean up APT cache to save space immediately
     rm -rf /var/lib/apt/lists/* && \
-    # CRITICAL FIX: Upgrade pip to resolve dependency AssertionErrors during installation.
+    # CRITICAL FIX 1: Upgrade pip to resolve dependency AssertionErrors during installation.
     python3.10 -m pip install --upgrade pip && \
-    # Install all required Python packages
-    # --no-cache-dir saves space.
-    # --extra-index-url ensures we find packages on both PyPI (default) AND PyTorch's custom index.
+    
+    # CRITICAL FIX 2: Split the installation into two RUNs to avoid "No space left on device."
+    # STEP A: Install the largest packages (Torch, Unsloth, Jupyterlab)
     pip install --no-cache-dir \
-        jupyterlab \
+        torch==2.2.0 \
+        xformers==0.0.24 \
         unsloth[cu121-torch220] \
+        jupyterlab \
+        --extra-index-url https://download.pytorch.org/whl/cu121 && \
+    
+    # STEP B: Install the remaining, smaller dependencies in a subsequent layer.
+    pip install --no-cache-dir \
         trl \
         peft \
         accelerate \
-        bitsandbytes \
-        torch==2.2.0 \
-        xformers==0.0.24 \
-        --extra-index-url https://download.pytorch.org/whl/cu121
+        bitsandbytes
 
 # Set the explicit token for Jupyter Lab access and expose the port 1111 (common on Vast.ai)
 ENV JUPYTER_TOKEN='unsloth'
