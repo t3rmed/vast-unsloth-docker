@@ -1,4 +1,4 @@
-# Use a recommended, stable base image for Unsloth with CUDA 12.1 test
+# Use a recommended, stable base image for Unsloth with CUDA 12.1 fixed
 FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
 
 # Set the working directory to /workspace, which aligns with Vast.ai best practices
