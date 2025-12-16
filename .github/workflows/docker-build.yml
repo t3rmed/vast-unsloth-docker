@@ -3,9 +3,9 @@ name: Build and Push Docker Image
 on:
   push:
     branches:
-      - main  # Trigger on pushes to the main branch
+      - main
     paths:
-      - 'Dockerfile' # Only run if the Dockerfile changes
+      - 'Dockerfile'
 
 jobs:
   build_and_push:
@@ -21,13 +21,15 @@ jobs:
     - name: 🔑 Log in to Docker Hub
       uses: docker/login-action@v3
       with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }} # Uses the secret for security
-        password: ${{ secrets.DOCKERHUB_TOKEN }} # Uses the secret for security
+        # !!! USE YOUR CUSTOM SECRET NAMES !!!
+        username: ${{ secrets.DOCKER_USER }} 
+        password: ${{ secrets.DOCKER_PAT }}
 
     - name: 🏗️ Build and Push to Docker Hub
       uses: docker/build-push-action@v6
       with:
-        context: . # Use the current directory as the build context
-        push: true # Must be true to push the image to the registry
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/unsloth-custom:latest # Your target tag
-        platforms: linux/amd64 # Ensure compatibility with Vast.ai
+        context: .
+        push: true
+        # Make sure the tag uses your DOCKER_USER secret for the repository name
+        tags: ${{ secrets.DOCKER_USER }}/unsloth-custom:latest
+        platforms: linux/amd64
