@@ -1,25 +1,33 @@
-FROM nvidia/cuda:12.9.0-cudnn-devel-ubuntu22.04
+# Dockerfile contents (MUST be saved as 'Dockerfile' in a clean directory)
+FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
 
-RUN mkdir /workspace && cd /workspace
-
-# Set the working directory
 WORKDIR /workspace
-# Mark /app as a volume to be mounted
 VOLUME /workspace
 
-# Install Jupyter Notebook
-RUN apt-get update
-RUN apt-get install -y python3 python3-pip
-    
-RUN pip install jupyter -U && pip install jupyterlab
+# Combined, space-saving installation of all dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        python3.10 \
+        python3-pip \
+        python3.10-dev \
+        build-essential \
+        git \
+        wget \
+        cmake \
+        libcurl4-openssl-dev && \
+    rm -rf /var/lib/apt/lists/* && \
+    pip install --no-cache-dir \
+        jupyterlab \
+        unsloth[cu121-torch220] \
+        trl \
+        peft \
+        accelerate \
+        bitsandbytes \
+        torch==2.2.0 \
+        xformers==0.0.24 \
+        --index-url https://download.pytorch.org/whl/cu121
 
-RUN pip install unsloth
-
-# set the token for jupyter
 ENV JUPYTER_TOKEN='unsloth'
+EXPOSE 1111
 
-# Make port 8888 available to the world outside this container
-EXPOSE 8888
-
-# Run Jupyter Notebook when the container launches
-ENTRYPOINT ["jupyter", "lab","--ip=0.0.0.0","--allow-root"]
+ENTRYPOINT ["jupyter", "lab", "--port=1111", "--ip=0.0.0.0", "--allow-root", "--NotebookApp.token='unsloth'"]
