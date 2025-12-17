@@ -15,10 +15,9 @@ jobs:
     - name: 📦 Checkout repository
       uses: actions/checkout@v4
 
-    # CRITICAL FIX: Run the cleanup script to free space before the build
+    # CRITICAL FIX: Run the cleanup script to free disk space before the build starts (prevents I/O errors)
     - name: 🧹 Free Disk Space (28+ GB)
       run: bash free_disk_space.sh
-      # Give the script execution permission
       shell: bash
 
     - name: 🐳 Set up Docker Buildx
@@ -27,6 +26,7 @@ jobs:
     - name: 🔑 Log in to Docker Hub
       uses: docker/login-action@v3
       with:
+        # Use your custom secret names for authentication
         username: ${{ secrets.DOCKER_USER }} 
         password: ${{ secrets.DOCKER_PAT }}
 
