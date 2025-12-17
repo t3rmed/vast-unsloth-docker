@@ -5,7 +5,7 @@ FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
 WORKDIR /workspace
 VOLUME /workspace
 
-# 1. RUN: Install System Packages and Cleanup (No Change)
+# 1. RUN: Install System Packages and Cleanup (Fastest Layer)
 RUN apt-get update && \
     apt-get install -y \
         python3.10 \
@@ -16,18 +16,18 @@ RUN apt-get update && \
         wget \
         cmake \
         libcurl4-openssl-dev && \
+    # Clean up APT cache immediately
     rm -rf /var/lib/apt/lists/*
 
-# 2. RUN: CRITICAL FIX 1: Upgrade pip in its own layer. (No Change)
+# 2. RUN: CRITICAL FIX 1: Upgrade pip to resolve dependency errors.
 RUN python3.10 -m pip install --upgrade pip
 
-# 3. RUN: ISOLATE LARGEST PACKAGE 1: Install PyTorch + Index URL (CRITICAL SPACE FIX)
+# 3. RUN: ISOLATE LARGEST PACKAGE 1: Install PyTorch (Crucial Layer Separation)
 RUN pip install --no-cache-dir \
     torch==2.2.0 \
     --extra-index-url https://download.pytorch.org/whl/cu121
 
-# 4. RUN: ISOLATE LARGEST PACKAGE 2: Install Xformers (CRITICAL SPACE FIX)
-# Needs the index URL again just in case, but torch is already installed
+# 4. RUN: ISOLATE LARGEST PACKAGE 2: Install Xformers (Crucial Layer Separation)
 RUN pip install --no-cache-dir \
     xformers==0.0.24 \
     --extra-index-url https://download.pytorch.org/whl/cu121
