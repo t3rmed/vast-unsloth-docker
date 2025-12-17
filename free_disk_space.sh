@@ -12,7 +12,7 @@ sudo apt-get remove -y '^dotnet-.*'
 sudo apt-get remove -y '^llvm-.*'
 sudo apt-get remove -y 'php.*'
 
-# Remove large SDKs and Browsers, adding monodoc-http before mono-devel as suggested
+# Remove large SDKs and Browsers, including monodoc-http before mono-devel
 sudo apt-get remove -y azure-cli google-cloud-sdk hhvm google-chrome-stable firefox monodoc-http powershell mono-devel
 
 sudo apt-get autoremove -y
